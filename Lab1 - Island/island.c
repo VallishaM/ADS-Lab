@@ -1,115 +1,93 @@
-#include <stdio.h>
+#include <bits/stdc++.h>
+using namespace std;
 
-  
-int right = 1;
-int left = 0;
-
-int search(int a[], int n, int mobile)
+int find(int i, vector<int> &parent)
 {
-    for (int i = 0; i < n; i++)
-        if (a[i] == mobile)
-           return i + 1; 
+    int p = i;
+    while(parent[p] >= 0)
+        p = parent[p];
+    return p;
 }
-  
 
-
-int getMobileElement(int a[], int dir[], int n)
+void Union(int i, int j, vector<int> &parent)
 {
-    int mobile_prev = 0, mobile = 0;
-    for (int i = 0; i < n; i++)
+    int u = find(i, parent), v = find(j, parent);
+    if(u == v)
+        return;
+    if(parent[u] <= parent[v])
     {
-        
-        if (dir[a[i]-1] == left && i!=0)
-        {
-            if (a[i] > a[i-1] && a[i] > mobile_prev)
-            {
-                mobile = a[i];
-                mobile_prev = mobile;
-            }
-        }
-  
-        
-        if (dir[a[i]-1] == right && i!=n-1)
-        {
-            if (a[i] > a[i+1] && a[i] > mobile_prev)
-            {
-                mobile = a[i];
-                mobile_prev = mobile;
-            }
-        }
+        parent[u] += parent[v];
+        parent[v] = u;
     }
-  
-    if (mobile == 0 && mobile_prev == 0)
-        return 0;
     else
-        return mobile;
-}
-  
-void swap(int* a, int* b) {
-    int t = *a;
-    *a=*b;
-    *b=t;
-}
-int printOnePermutation(int a[], int dir[], int n)
-{
-    int mobile = getMobileElement(a, dir, n);
-    int pos = search(a, n, mobile);
-  
-    if (dir[a[pos - 1] - 1] ==  left)
-       swap(&a[pos-1], &a[pos-2]);
-  
-    else if (dir[a[pos - 1] - 1] == right)
-       swap(&a[pos], &a[pos-1]);
-    for (int i = 0; i < n; i++)
     {
-        if (a[i] > mobile)
+        parent[v] += parent[u];
+        parent[u] = v;
+    }
+}
+
+int countIslands(vector< vector<int> > mat, int n, int m)
+{
+    vector<int> parent(n*m, -1);
+    for(int i = 0; i < n; i++)
+    {
+        for(int j = 0; j < m; j++)
         {
-            if (dir[a[i] - 1] == right)
-                dir[a[i] - 1] = left;
-            else if (dir[a[i] - 1] == left)
-                dir[a[i] - 1] = right;
+            if(mat[i][j] == 0)
+                continue;
+            int node = i * m + j;
+            if(i-1 >= 0)
+            {
+                if(mat[i-1][j] == 1)
+                    Union(node, (i-1)*m + j, parent);
+                if(j-1 >= 0 && mat[i-1][j-1] == 1)
+                    Union(node, (i-1)*m + j - 1 , parent);
+                if(j+1 < m && mat[i-1][j+1] == 1)
+                    Union(node, (i-1)*m + j + 1, parent);
+            }
+            if(i+1 < n)
+            {
+                if(mat[i+1][j] == 1)
+                    Union(node, (i+1)*m + j, parent);
+                if(j-1 >= 0 && mat[i+1][j-1] == 1)
+                    Union(node, (i+1)*m + j - 1 , parent);
+                if(j+1 < m && mat[i+1][j+1] == 1)
+                    Union(node, (i+1)*m + j + 1, parent);
+            }
+            if(j-1 >= 0 && mat[i][j-1] == 1)
+                Union(node, i*m + j - 1, parent);
+            if(j+1 < n && mat[i][j+1] == 1)
+                Union(node, i*m + j + 1, parent);
         }
     }
-    for (int i = 0; i < n; i++)
-        printf("%c", (a[i]+64)); //modified
-    printf("\n");
-}
-  
-
-int fact(int n)
-{
-    int res = 1;
-    for (int i = 1; i <= n; i++)
-        res = res * i;
-    return res;
-}
-  
-void onebyonePermutation(int n)
-{
-    
-    int a[n];
-    int dir[n];
-
-    for (int i = 0; i < n; i++)
+    int count = 0;
+    vector<bool> flag(n*m);
+    for(int i = 0; i < n; i++)
     {
-        a[i] = i + 1;
-        printf("%c", (a[i]+64)); //modified
+        for(int j = 0; j < m; j++)
+        {
+            if(mat[i][j] == 1)
+            {
+                int par = find(i*m + j, parent);
+                if(!flag[par])
+                {
+                    count++;
+                    flag[par] = true;
+                }
+            }
+        }
     }
-    printf("\n");
-  
-    for (int i = 0; i < n; i++)
-        dir[i] =  left;
-
-    for (int i = 1; i < fact(n); i++)
-        printOnePermutation(a, dir, n);
+    return count;
 }
 
 int main()
 {
-    int n;
-    printf("Enter n : ");
-    scanf("%d", &n);
-    printf("\nThe permutations are ;\n\n");
-    onebyonePermutation(n);
+    int n = 5, m = 5;
+    vector< vector<int> > mat = {{1, 1, 0, 0, 0},
+                                 {0, 1, 1, 0, 1},
+                                 {1, 0, 0, 1, 1},
+                                 {0, 0, 0, 0, 0},
+                                 {1, 1, 1, 1, 1}};
+    cout << "Number of Islands = " << countIslands(mat, n, m);
     return 0;
 }
